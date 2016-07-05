@@ -10,6 +10,7 @@
 orthomcl_config_file=/home/sswang/software/sequence_analysis/orthomclSoftware-v2.0.4/test1/orthomcl.config
 install_schema_log_file=/home/sswang/software/sequence_analysis/orthomclSoftware-v2.0.4/test1/install_schema.log
 blast_prog="blastp"
+blastp=~/bin/blastp
 
 
 ##########################################################################
@@ -37,7 +38,7 @@ do
 		blast_prog=$2
 		shift
 		;;
-	--i|--input)
+	-i|--i|--in|--input)
 		local tmp=$2
 		local input_tmp=${tmp%,*}
 		local abbr_tmp=${tmp##*,}
@@ -49,7 +50,7 @@ do
 	-s|--s|--silent)
 		silent='true'
 		;;
-	--h|--help)
+	-h|--h|--help)
 		show_help
 		;;
 	*)
@@ -96,14 +97,17 @@ local blast;
 blast=$1;
 blast_programme=$2;
 if [ "$blast" == 'true' ]; then
-	type="T"
-	echo "formatdb"
+	type="prot"
+	echo "makeblastdb"
 	cd compliantFasta
 	local input_basename=`basename all.fasta`
-	[ $blast_programme == "blastn" ] && type="F"
-	formatdb -i $input_basename -p $type;
+	[ $blast_programme == "blastn" ] && type="nucl"
+	makeblastdb -in $input_basename -dbtype $type -out $input_basename
+	#formatdb -i $input_basename -p $type;
 	echo -ne "BLASTing\t";
-	blast_command="blastall -p $blast_programme -i all.fasta -d $input_basename -e $blast_evalue -o all_VS_all.out.tab -a $blast_CPU -m8";
+	blast_command="$blastp -query all.fasta -db $input_basename -out all_VS_all.out.tab -outfmt 6 -evalue 1e-3 -num_threads $blast_CPU"
+	#blast_command="blastall -p $blast_programme -i all.fasta -d $input_basename -e $blast_evalue -o all_VS_all.out.tab -a $blast_CPU -m8";
+	#blast_command="blastall -p $blast_programme -i all.fasta -d $input_basename -e $blast_evalue -o all_VS_all.out.tab -a $blast_CPU -m8";
 	echo $blast_command;
 	$blast_command;
 	mv all_VS_all.out.tab ../
@@ -114,7 +118,7 @@ fi
 
 prepare_compliant(){
 content=`ls compliantFasta`;
-if [ "$silent" = 'true' ]
+if [ "$silent" == 'true' ]
 then
 	echo 
 	cd compliantFasta; ls | grep -v '.*.fasta$' | xargs rm; cd ..;
