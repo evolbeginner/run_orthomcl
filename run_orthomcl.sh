@@ -135,6 +135,7 @@ fi
 
 orthomcl_2(){
 	orthomclBlastParser all_VS_all.out.tab compliantFasta > similarSequences.txt
+	awk 'BEGIN{FS="\t"}{pairs[$1"\t"$2]+=1; all[$1"\t"$2]=$0}END{for(i in all){print all[i]}}' similarSequences.ori.txt | sponge similarSequences.txt
 	orthomclLoadBlast $orthomcl_config_file similarSequences.txt
 	if [ -e pairs ]; then rm pairs -rf; fi;
 	orthomclPairs $orthomcl_config_file orthomcl_pairs.log cleanup=no
